@@ -11,13 +11,23 @@ pre: "<b>1. </b>"
 
 
 
+## EC2 instance 생성
+
+>> EC2 instance 생성 가이드
+
+>> MySQL Client 설치
+
+
 ## MySQL 셋업 및 테이블 생성
 
+Client 접속
 
 ```
 mysql -h summit-db-cluster-instance-1.csz1mbf6avao.ap-northeast-2.rds.amazonaws.com -P 3306 -u admin -p
 Enter password:
 ```
+
+유저 생성
 
 ```
 CREATE USER 'user1'@'%' IDENTIFIED BY 'password1';
@@ -26,6 +36,9 @@ GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, RELOAD, PROCESS, REFERENCES,
 ```
 
 ```
+mysql -h summit-db-cluster-instance-1.csz1mbf6avao.ap-northeast-2.rds.amazonaws.com -P 3306 -u user1 -p
+Enter password:
+
 CREATE TABLE products (
     product_id BIGINT PRIMARY KEY,
     category_id VARCHAR(30),
@@ -46,7 +59,7 @@ IGNORE 1 LINES;
 
 
 ```
-
+s
 
 
 

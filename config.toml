@@ -1,5 +1,5 @@
 # baseURL 변경
-baseURL = "/summit-demo/"
+baseURL = "https://master.d1ves3j69xoriy.amplifyapp.com/"
 languageCode = "ko-KR"
 defaultContentLanguage = "ko"
 
