@@ -5,60 +5,82 @@ pre: "<b>1. </b>"
 ---
 
 
+이번 단계에서는 Aurora Database를 생성하고 데이터를 실습 전체에서 사용할 데이터를 입력합니다.
+ 
+## Table of Contents
+
+1. Aurora DB
+2. EC2 Instance
+3. MySQL 셋업 및 테이블 생성
+
+
 ## Aurora DB
 
-> Aurora MySQL 생성 가이드
+1. Amazon RDS 페이지로 이동합니다. [link](https://ap-northeast-2.console.aws.amazon.com/rds/home?region=ap-northeast-2)
 
+2. `데이터베이스 생성`을 클릭합니다.
+
+3. `손쉬운 생성`을 선택하고 구성에서 `Amazon Aurora`를 선택합니다.
 
 ![pic](./images/lab0-1.png)
 
+4. `MySQL과 호환되는 Amazon Aurora`을 선택하고 구성에서 `개발/테스트`를 선택합니다.
+`DB 클러스터 식별자`에는 `summit-db-cluster`를 입력합니다.
+`마스터 사용자 이름`에는 MySQL에서 사용할 마스터 사용자 이름을 입력합니다.
+마스터 사용자의 암호를 입력하고 데이터 베이스 생성을 클릭합니다.
 
 ![pic](./images/lab0-2.png)
 
+5. Amazon Aurora 클러스터가 생성되면 엔드포인트를 따로 적어둡니다.
 
 ![pic](./images/lab0-3.png)
 
 
 ## EC2 instance 생성
 
-> EC2 instance 생성 가이드
 
-> MySQL Client 설치
+여기서 생성할 EC2 인스턴스는 RDS에 접속할 클라이언트 용도입니다.
 
-> 인스턴스 접속
+1. 아래의 지시를 따라서 인스턴스를 생성합니다.
+* https://aws.amazon.com/ko/premiumsupport/knowledge-center/create-linux-instance/
+
+2. 앞서 생성한 Amazon Aurora와 동일한 Security Group을 지정합니다.
+
+3. Security Group의 inbound rule에 3306 포트를 추가합니다.
+
 
 ## MySQL 셋업 및 테이블 생성
 
 
-데이터 다운로드
+1. 실습에서 사용할 데이터를 다운로드합니다.
 
 ```
 wget https://raw.githubusercontent.com/elbanic/summit_2020_demo/master/sample-data/users/users.csv
 wget https://raw.githubusercontent.com/elbanic/summit_2020_demo/master/sample-data/products/products.csv
 ```
 
-
-MySQL Client로 Aurora MySQL 접속
+2. EC2 Instance에서 MySQL Client를 이용하여 Aurora MySQL 접속합니다.
+MySQL Client 프로그램이 없으면 `yum install -y mysql` 명령어를 이용하여 설치합니다.
 
 ```
 mysql -h summit-db-cluster-instance-1.csz1mbf6avao.ap-northeast-2.rds.amazonaws.com -P 3306 -u admin -p
 Enter password:
 ```
 
-DB 유저 생성
+3. Database와 User를 생성합니다
 
 ```
+CREATE DATABASE ecommerce;
+
 CREATE USER 'user1'@'%' IDENTIFIED BY 'password1';
 
 GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, RELOAD, PROCESS, REFERENCES, INDEX, ALTER, SHOW DATABASES, CREATE TEMPORARY TABLES, LOCK TABLES, EXECUTE, REPLICATION SLAVE, REPLICATION CLIENT, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, CREATE USER, EVENT, TRIGGER ON *.* TO 'user1'@'%' WITH GRANT OPTION;
 ```
 
-데이터 
+
+4. Table을 생성하고 데이터를 Table에 입력합니다.
 
 ```
-mysql -h summit-db-cluster-instance-1.csz1mbf6avao.ap-northeast-2.rds.amazonaws.com -P 3306 -u user1 -p
-Enter password:
-
 CREATE TABLE products (
     product_id BIGINT PRIMARY KEY,
     category_id VARCHAR(30),
@@ -75,12 +97,18 @@ IGNORE 1 LINES;
 ```
 
 ```
+CREATE TABLE users (
+    user_id BIGINT PRIMARY KEY,
+    sum_purchase FLOAT
+);
 
-
-
+LOAD DATA LOCAL INFILE '/home/ec2-user/users.csv' INTO TABLE users
+FIELDS TERMINATED BY ','
+OPTIONALLY ENCLOSED BY '"'
+IGNORE 1 LINES;
 ```
-s
 
+5. 실습에서 사용할 데이터가 모두 준비되었습니다.
 
 
 ---
