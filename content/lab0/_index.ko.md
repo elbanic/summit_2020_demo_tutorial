@@ -10,8 +10,9 @@ pre: "<b>1. </b>"
 ## Table of Contents
 
 1. Aurora DB
-2. EC2 Instance
-3. MySQL 셋업 및 테이블 생성
+2. EC2 Instance 생성
+3. 실습 데이터 다운로드
+4. MySQL 셋업 및 테이블 생성
 
 
 ## Aurora DB
@@ -49,10 +50,24 @@ pre: "<b>1. </b>"
 3. Security Group의 inbound rule에 3306 포트를 추가합니다.
 
 
+## 실습 데이터 다운로드
+
+1. 실습에서 사용할 데이터를 다운로드합니다. 이 데이터는 Kaggle에서 찾을 수 있으며 유저의 구매 이력 데이터로서 DB용 데이터를 만드는데 사용되었으며, 추후 SageMaker 실습에서 사용할 예정입니다.
+	
+	> 데이터에 대한 자세한 사항은 출처 [eCommerce behavior data from multi category store](https://www.kaggle.com/mkechinov/ecommerce-behavior-data-from-multi-category-store)에서 확인해 주십시오.
+
+2. 데이터를 실습용 S3 bucket에 업로드합니다. `USERID` 부분에는 본인의 ID를 작성합니다.
+
+```
+aws s3 mb s3://summit-demo-USERID --region ap-northeast-2
+aws s3 cp 2019-Oct.csv s3://summit-demo-USERID/
+aws s3 cp 2019-Nov.csv s3://summit-demo-USERID/
+```
+
 ## MySQL 셋업 및 테이블 생성
 
 
-1. 실습에서 사용할 데이터를 다운로드합니다.
+1. 실습에서 사용할 DB용 데이터를 다운로드합니다.
 
 ```
 wget https://raw.githubusercontent.com/elbanic/summit_2020_demo/master/sample-data/users/users.csv
