@@ -149,17 +149,201 @@ test_iter = gluon.data.DataLoader(train, shuffle=True, num_workers=4, batch_size
 
 ## 모델 학습하기
 
+### Train Locally
 
+1. Network를 정의합니다
 
+```
+class MFBlock(gluon.HybridBlock):
+    def __init__(self, max_users, max_items, num_emb, dropout_p=0.5):
+        super(MFBlock, self).__init__()
+        
+        self.max_users = max_users
+        self.max_items = max_items
+        self.dropout_p = dropout_p
+        self.num_emb = num_emb
+        
+        with self.name_scope():
+            self.user_embeddings = gluon.nn.Embedding(max_users, num_emb)
+            self.item_embeddings = gluon.nn.Embedding(max_items, num_emb)
+            
+            self.dropout_user = gluon.nn.Dropout(dropout_p)
+            self.dropout_item = gluon.nn.Dropout(dropout_p)
 
+            self.dense_user   = gluon.nn.Dense(num_emb, activation='relu')
+            self.dense_item = gluon.nn.Dense(num_emb, activation='relu')
+            
+    def hybrid_forward(self, F, users, items):
+        a = self.user_embeddings(users)
+        a = self.dense_user(a)
+        
+        b = self.item_embeddings(items)
+        b = self.dense_item(b)
 
-## 모델 평가하기
+        predictions = self.dropout_user(a) * self.dropout_item(b)     
+        predictions = F.sum(predictions, axis=1)
+        return predictions
 
+num_embeddings = 64
 
+net = MFBlock(max_users=user_index.shape[0], 
+              max_items=product_index.shape[0],
+              num_emb=num_embeddings,
+              dropout_p=0.5)
+```
 
+2. 파라미터를 설정합니다.
 
+```
+# Initialize network parameters
+ctx = mx.gpu()
+net.collect_params().initialize(mx.init.Xavier(magnitude=60),
+                                ctx=ctx,
+                                force_reinit=True)
+net.hybridize()
 
-실습에서 사용한 SageMaker 노트북은 [Github summit_2020_demo](https://github.com/elbanic/summit_2020_demo/notebooks)에서 다운로드할 수 있습니다.
+# Set optimization parameters
+opt = 'sgd'
+lr = 0.02
+momentum = 0.9
+wd = 0.
+
+trainer = gluon.Trainer(net.collect_params(),
+                        opt,
+                        {'learning_rate': lr,
+                         'wd': wd,
+                         'momentum': momentum})
+```
+
+3. 실행하는 함수를 작성합니다
+
+```
+def execute(train_iter, test_iter, net, epochs, ctx):
+    
+    loss_function = gluon.loss.L2Loss()
+    for e in range(epochs):
+        
+        print("epoch: {}".format(e))
+        
+        for i, (user, item, label) in enumerate(train_iter):
+                user = user.as_in_context(ctx)
+                item = item.as_in_context(ctx)
+                label = label.as_in_context(ctx)
+                
+                with mx.autograd.record():
+                    output = net(user, item)               
+                    loss = loss_function(output, label)
+                    
+                loss.backward()
+                trainer.step(batch_size)
+
+        print("EPOCH {}: MSE ON TRAINING and TEST: {}. {}".format(e,
+                                                                   eval_net(train_iter, net, ctx, loss_function),
+                                                                   eval_net(test_iter, net, ctx, loss_function)))
+    print("end of training")
+    return net
+
+def eval_net(data, net, ctx, loss_function):
+    acc = MSE()
+    for i, (user, item, label) in enumerate(data):
+        
+            user = user.as_in_context(ctx)
+            item = item.as_in_context(ctx)
+            label = label.as_in_context(ctx)
+            predictions = net(user, item).reshape((batch_size, 1))
+            acc.update(preds=[predictions], labels=[label])
+   
+    return acc.get()[1]
+```
+
+4. 생성한 함수들을 local에서 테스트합니다
+
+```
+%%time
+
+epochs = 3
+
+trained_net = execute(train_iter, test_iter, net, epochs, ctx)
+```
+
+5. 모델 훈련이 완료되면 아래와 같이 사전 검증을 시도할 수 있습니다.
+
+```
+product_index['u6_predictions'] = trained_net(nd.array([6] * product_index.shape[0]).as_in_context(ctx), 
+                                              nd.array(product_index['item'].values).as_in_context(ctx)).asnumpy()
+product_index.sort_values('u6_predictions', ascending=False)
+```
+
+```
+product_index['u7_predictions'] = trained_net(nd.array([7] * product_index.shape[0]).as_in_context(ctx), 
+                                              nd.array(product_index['item'].values).as_in_context(ctx)).asnumpy()
+product_index.sort_values('u7_predictions', ascending=False)
+```
+
+```
+product_index[['u6_predictions', 'u7_predictions']].plot.scatter('u6_predictions', 'u7_predictions')
+plt.show()
+```
+
+### Train with SageMaker
+
+1. Local이 아닌 API를 이용하여 SageMaker에서 학습할 수 있습니다. 이렇게 하면 훈련 작업을 시켜놓고 다른 작업을 할 수 있어 생산성이 향상됩니다.
+SageMaker의 Built-in MXNet 컨테이너를 사용하기 위해서는 위 함수를 Python 스크립트로 작성해야 합니다. [recommender.py](https://github.com/elbanic/summit_2020_demo/blob/master/sagemaker-notebook/recommender.py)를 참조해 주시기 바랍니다.
+
+2. SageMaker는 S3의 데이터를 다운로드하여 학습할 수 있습니다. 실습에서 사용한 파일을 하나로 합쳐서 training용 경로에 업로드합니다.
+
+```
+!cat /tmp/recsys/2019-Oct.csv > /tmp/recsys/2019-Oct-Nov.csv
+!tail -n +2 /tmp/recsys/2019-Nov.csv >> /tmp/recsys/2019-Oct-Nov.csv
+boto3.client('s3').upload_file('/tmp/recsys/2019-Oct-Nov.csv', bucket, prefix + '/train/2019-Oct-Nov.csv')
+```
+
+3. recommender.py
+
+```
+
+opt = 'sgd'
+lr = 0.02
+momentum = 0.9
+wd = 0.
+
+m = MXNet('recommender.py', 
+          py_version='py3',
+          role=role, 
+          train_instance_count=1, 
+          train_instance_type="ml.p3.2xlarge",
+          output_path='s3://{}/{}/output'.format('summit-2020-db-ml', 'ecommerce-behavior-data'),
+          hyperparameters={'num_embeddings': 64, 
+                           'opt': opt, 
+                           'lr': lr, 
+                           'momentum': momentum, 
+                           'wd': wd,
+                           'epochs': 10},
+         framework_version='1.1')
+
+m.fit({'train': 's3://{}/{}/train/'.format('summit-2020-db-ml', 'ecommerce-behavior-data')})
+```
+
+4. 학습이 완료된 모델을 배포합니다. 배포가 완료되면 이 모델의 추론 가능한 엔드포인트가 생성됩니다.
+
+```
+predictor = m.deploy(initial_instance_count=1, 
+                     instance_type='ml.m4.xlarge')
+predictor.serializer = None
+```
+
+5. 추론 엔트포인트를 호출하기 위해서는 predict를 이용해서 호출할 수 있습니다.
+
+```
+predictor.predict(json.dumps({'user_id': user_index[user_index['user'] == 6]['user_id'].values.tolist(), 
+                              'product_id': [44600062, 1307067]}))
+```
+
+6. [SageMaker Endpoint](https://ap-northeast-2.console.aws.amazon.com/sagemaker/home?region=ap-northeast-2#/endpoints)에 접속하여 위에서 생성한 엔드포인트를 확인하고 엔드포인트 이름을 따로 기록해 둡니다.
+
+![pic](./images/lab1-4.png)
+
+실습에서 사용한 SageMaker 노트북은 [Github summit_2020_demo](https://github.com/elbanic/summit_2020_demo/tree/master/sagemaker-notebook)에서 다운로드할 수 있습니다.
 
 
 ---
