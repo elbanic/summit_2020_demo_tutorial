@@ -5,7 +5,14 @@ pre: "<b>2. </b>"
 ---
 
 
-이번 단계에서는 SageMaker를 이용하여 구매 이력으로부터 상품을 추천하눈 간단한 추천 모델을 만듭니다.
+이번 단계에서는 SageMaker를 이용하여 구매 이력으로부터 상품을 추천하는 간단한 추천 모델을 만듭니다.
+
+## Table of Contents
+
+1. SageMaker Notebook 생성하기
+2. 데이터 Explore / Clean / Prepare
+3. 모델 학습하기
+4. MySQL 셋업 및 테이블 생성
 
 
 ## SageMaker Notebook 생성하기
@@ -324,7 +331,10 @@ m = MXNet('recommender.py',
 m.fit({'train': 's3://{}/{}/train/'.format('summit-2020-db-ml', 'ecommerce-behavior-data')})
 ```
 
-4. 학습이 완료된 모델을 배포합니다. 배포가 완료되면 이 모델의 추론 가능한 엔드포인트가 생성됩니다.
+
+## Endpoint 생성하기
+
+1. 학습이 완료된 모델을 배포합니다. 배포가 완료되면 이 모델의 추론 가능한 엔드포인트가 생성됩니다.
 
 ```
 predictor = m.deploy(initial_instance_count=1, 
@@ -332,16 +342,22 @@ predictor = m.deploy(initial_instance_count=1,
 predictor.serializer = None
 ```
 
-5. 추론 엔트포인트를 호출하기 위해서는 predict를 이용해서 호출할 수 있습니다.
+2. Endpoint를 생성하면 [SageMaker 콘솔 Endpoint](https://ap-northeast-2.console.aws.amazon.com/sagemaker/home?region=ap-northeast-2#/endpoints)에서 상세 정보를 확인할 수 있습니다.
+
+
+![pic](./images/lab1-4.png)
+
+
+3. 추론 엔트포인트를 호출하기 위해서는 predict를 이용해서 호출할 수 있습니다.
 
 ```
 predictor.predict(json.dumps({'user_id': user_index[user_index['user'] == 6]['user_id'].values.tolist(), 
                               'product_id': [44600062, 1307067]}))
 ```
 
-6. [SageMaker Endpoint](https://ap-northeast-2.console.aws.amazon.com/sagemaker/home?region=ap-northeast-2#/endpoints)에 접속하여 위에서 생성한 엔드포인트를 확인하고 엔드포인트 이름을 따로 기록해 둡니다.
+4. [SageMaker Endpoint](https://ap-northeast-2.console.aws.amazon.com/sagemaker/home?region=ap-northeast-2#/endpoints)에 접속하여 위에서 생성한 엔드포인트를 확인하고 엔드포인트 이름을 따로 기록해 둡니다.
 
-![pic](./images/lab1-4.png)
+![pic](./images/lab1-5.png)
 
 실습에서 사용한 SageMaker 노트북은 [Github summit_2020_demo](https://github.com/elbanic/summit_2020_demo/tree/master/sagemaker-notebook)에서 다운로드할 수 있습니다.
 

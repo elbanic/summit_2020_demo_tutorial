@@ -1,5 +1,5 @@
 ---
-title: Amazon Aurora Database 만들기
+title: Aurora Database 생성하기
 weight: 20
 pre: "<b>1. </b>"
 ---
@@ -11,7 +11,7 @@ pre: "<b>1. </b>"
 
 1. Aurora DB
 2. EC2 Instance 생성
-3. 실습 데이터 다운로드
+3. 실습 데이터 다운로드 (Kaggle E-commerce)
 4. MySQL 셋업 및 테이블 생성
 
 
@@ -21,12 +21,16 @@ pre: "<b>1. </b>"
 
 2. `데이터베이스 생성`을 클릭합니다.
 
-3. `손쉬운 생성`을 선택하고 구성에서 `Amazon Aurora`를 선택합니다.
+3. 아래 내용을 참고하여 Aurora 클러스터를 생성합니다.
 
-![pic](./images/lab0-1.png)
+```
+데이터베이스 생성 방식 선택 : 표준 생성
+엔진 옵션 : Amazon Aurora
+에디션 : MySQL과 호환되는 Amazon Aurora
+버전 : Aurora (MySQL 5.7) 2.07.0 이상
+```
 
-4. `MySQL과 호환되는 Amazon Aurora`을 선택하고 구성에서 `개발/테스트`를 선택합니다.
-`DB 클러스터 식별자`에는 `summit-db-cluster`를 입력합니다.
+4. `DB 클러스터 식별자`에는 `summit-db-cluster`를 입력합니다.
 `마스터 사용자 이름`에는 MySQL에서 사용할 마스터 사용자 이름을 입력합니다.
 마스터 사용자의 암호를 입력하고 데이터 베이스 생성을 클릭합니다.
 
@@ -96,6 +100,8 @@ GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, RELOAD, PROCESS, REFERENCES,
 4. Table을 생성하고 데이터를 Table에 입력합니다.
 
 ```
+USE ecommerce;
+
 CREATE TABLE products (
     product_id BIGINT PRIMARY KEY,
     category_id VARCHAR(30),
