@@ -4,7 +4,6 @@ weight: 50
 pre: "<b>4. </b>"
 ---
 
-
 이번 단계에서는 Aurora MySQL에서 Comprehend Sentiment 분석 API를 호출합니다.
 
 ## Table of Contents
@@ -69,6 +68,7 @@ SELECT product_title,brand,
 
 **이를 활용하면 Sentiment 분석 결과가 좋은 브랜드를 위주로 recommend_score가 높은 순으로 내림차순 정렬하면 유저별 추천 상품을 얻을 수 있을 것입니다.**
 
+**여러분의 아이디어를 SQL을 이용하여 쉽고 빠르게 적용하시기 바랍니다!**
 
 
 ---
