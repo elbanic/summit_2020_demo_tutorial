@@ -11,7 +11,7 @@ pre: "<b>4. </b>"
 
 1. 실습 데이터 다운로드 (Amazon Review dataset)
 2. Comprehend API 호출하는 SQL function 만들기
-
+3. 분석 결과 활용
 
 ## 실습 데이터 다운로드 (Amazon Review dataset) 
 
@@ -61,6 +61,15 @@ SELECT product_title,brand,
 2. 결과물을 보면 `sentiment` 결과와 `confidence` 값을 받아온 것을 확인할 수 있습니다.
 
 ![pic](./images/lab3-1.png)
+
+
+## 분석 결과 활용
+
+**지금까지 우리는 1. 유저별 상품의 연관성 점수와 2. 브랜드별 Sentiment 점수를 얻었습니다.**
+
+**이를 활용하면 Sentiment 분석 결과가 좋은 브랜드를 위주로 recommend_score가 높은 순으로 내림차순 정렬하면 유저별 추천 상품을 얻을 수 있을 것입니다.**
+
+
 
 ---
 <p align="center">

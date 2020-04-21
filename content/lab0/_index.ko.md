@@ -11,7 +11,7 @@ pre: "<b>1. </b>"
 
 1. Aurora DB
 2. EC2 Instance 생성
-3. 실습 데이터 다운로드 (Kaggle E-commerce)
+3. 실습 데이터 다운로드 (Kaggle E-commerce dataset)
 4. MySQL 셋업 및 테이블 생성
 
 
