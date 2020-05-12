@@ -74,6 +74,7 @@ pre: "<b>3. </b>"
 ![pic](./images/lab2-8.png)
 
 4. 파라미터 그룹을 클릭하여 세부사항을 수정합니다.
+
 5. comprehend를 필터링하여 파라미터 편집을 클릭하고 `값`에 Comprehend 권한을 가진 IAM 롤의 ARN을 붙여넣기 합니다.
 
 ![pic](./images/lab2-9.png)
@@ -83,6 +84,8 @@ pre: "<b>3. </b>"
 ![pic](./images/lab2-10.png)
 
 6. 동일한 방식으로 SageMaker의 파라미터에도 적용합니다.
+
+
 7. 변경사항 저장을 클릭하여 파라미터 그룹 편집을 완료합니다.
 
 
